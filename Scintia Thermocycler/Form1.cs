@@ -207,7 +207,7 @@ namespace Scintia_Thermocycler
                 {
                     Program.topTemp = (float)Program.inDataToTemp(Program.nuevo);
                 }
-                
+                Program.tempRead = true;                
             }
         }
 
