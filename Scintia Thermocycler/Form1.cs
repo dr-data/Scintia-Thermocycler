@@ -240,6 +240,20 @@ namespace Scintia_Thermocycler
                     serialPort1.Write("A");
                     while (!Program.tempRead)
                     {
+                        Program.aux += serialPort1.ReadExisting();
+                        if (Program.aux[Program.aux.Length - 1] == '\n')
+                        {
+                            Program.nuevo = Program.aux.Clone() as String;
+                            if (Program.readingBottom)
+                            {
+                                Program.botTemp = (float)Program.inDataToTemp(Program.nuevo);
+                            }
+                            else
+                            {
+                                Program.topTemp = (float)Program.inDataToTemp(Program.nuevo);
+                            }
+                            Program.tempRead = true;
+                        }
                     }
                     Program.tempRead = false;
 
@@ -248,6 +262,20 @@ namespace Scintia_Thermocycler
                     serialPort1.Write("B");
                     while (!Program.tempRead)
                     {
+                        Program.aux += serialPort1.ReadExisting();
+                        if (Program.aux[Program.aux.Length - 1] == '\n')
+                        {
+                            Program.nuevo = Program.aux.Clone() as String;
+                            if (Program.readingBottom)
+                            {
+                                Program.botTemp = (float)Program.inDataToTemp(Program.nuevo);
+                            }
+                            else
+                            {
+                                Program.topTemp = (float)Program.inDataToTemp(Program.nuevo);
+                            }
+                            Program.tempRead = true;
+                        }
                     }
                     Program.tempRead = false;
 
