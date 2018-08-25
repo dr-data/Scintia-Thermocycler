@@ -25,6 +25,7 @@ namespace Scintia_Thermocycler
             InitializeComponent();
             bWorker = new BackgroundWorker();
             bWorker.DoWork += new DoWorkEventHandler(bWorker_DoWork);
+            bWorker.WorkerSupportsCancellation = true;
             if (!serialPort1.IsOpen)
             {
                 try
@@ -178,16 +179,13 @@ namespace Scintia_Thermocycler
         /// </summary>
         private void stopBtn_Click(object sender, EventArgs e)
         {
-            if (bWorker.IsBusy)
-            {
-                bWorker.CancelAsync();
-                Program.running = false;
-                addSBtn.Enabled = true;
-                addCBtn.Enabled = true;
-                editSelectedBtn.Enabled = true;
-                remSelctedBtn.Enabled = true;
-                runBtn.Enabled = true;
-            }
+            bWorker.CancelAsync();
+            Program.running = false;
+            addSBtn.Enabled = true;
+            addCBtn.Enabled = true;
+            editSelectedBtn.Enabled = true;
+            remSelctedBtn.Enabled = true;
+            runBtn.Enabled = true;
         }
 
         /// <summary>
@@ -230,6 +228,13 @@ namespace Scintia_Thermocycler
                 while(curDur > 0){
                     // Start timer
                     counter = Stopwatch.StartNew();
+
+                    // Stop if Cancel was clicked
+                    if (this.bWorker.CancellationPending)
+                    {
+                        e.Cancel = true;
+                        return;
+                    }
 
                     // Get Current Top Temperature
                     Program.readingBottom = false;
@@ -292,13 +297,6 @@ namespace Scintia_Thermocycler
                             ttChart.Refresh()
                         )
                     );
-
-                    // Stop if Cancel was clicked
-                    if (this.bWorker.CancellationPending)
-                    {
-                        e.Cancel = true;
-                        return;
-                    }
 
                     // Stop Timer
                     counter.Stop();
