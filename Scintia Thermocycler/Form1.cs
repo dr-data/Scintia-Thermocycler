@@ -170,7 +170,7 @@ namespace Scintia_Thermocycler
             editSelectedBtn.Enabled = false;
             remSelctedBtn.Enabled = false;
             runBtn.Enabled = false;
-            Program.cycleToPerform = Program.treeToList(stepsList);
+            Program.TraverseTree(stepsList.Nodes);
             bWorker.RunWorkerAsync(Program.cycleToPerform);
         }
 
@@ -220,6 +220,8 @@ namespace Scintia_Thermocycler
             float tempObj;
             int curDur;
             long curTime = 0L;
+            
+            // MessageBox.Show(stepsToDo[0][1].ToString());
 
             while (stepsToDo.Count() > 0)
             {

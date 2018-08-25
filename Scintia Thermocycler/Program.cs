@@ -35,7 +35,7 @@ namespace Scintia_Thermocycler
         /// <summary>
         /// GUI to Logic Helpers
         /// </summary>
-        public static List<List<float>> cycleToPerform = new List<List<float>>();
+        public static List<List<float>> cycleToPerform = new List<List<float>> { };
         /// <summary>
         /// Temperature Conversion Helpers
         /// </summary>
@@ -56,35 +56,38 @@ namespace Scintia_Thermocycler
         /// <summary>
         /// Global functions.
         /// </summary>
-        public static List<List<float>> treeToList(TreeView t)
+        public static void TraverseTree(TreeNodeCollection nodes)
         {
-            List<List<float>> resultList = new List<List<float>> { };
-            TreeNodeCollection steps = t.Nodes;
-            foreach (TreeNode step in steps)
+            foreach (TreeNode child in nodes)
             {
-                if(step.Name == "Root")
-                {
-                    continue;
-                }
-                else if (step.Text.Contains("Cycle Name"))
-                {
-                    TreeNodeCollection substeps = step.Nodes;
-                    int reps = 0;
-                    while (reps < (int)step.Tag)
+                addToStep(child);
+                TraverseTree(child.Nodes);
+            }
+        }
+
+        public static void addToStep(TreeNode node)
+        {
+            if (node.Name == "Root")
+            {
+                return;
+            }
+            else if (node.Text.Contains("Cycle Name"))
+            {
+                int reps = 0;
+                while(reps < (int)node.Tag){
+                    foreach (TreeNode child in node.Nodes)
                     {
-                        foreach (TreeNode substep in substeps)
-                        {
-                            resultList.Add((List<float>)substep.Tag);
-                        }
+                        addToStep(child);
                     }
-                }
-                else if (step.Text.Contains("Temperature") && step.Parent.Name == "Root")
-                {
-                    resultList.Add((List<float>)step.Tag);
+                    reps++;
                 }
             }
-            return resultList;
+            else if (node.Text.Contains("Temperature") && node.Parent.Name == "Root")
+            {
+                cycleToPerform.Add((List<float>)node.Tag);
+            }
         }
+
         public static double inDataToTemp(String inputData)
         {
             Program.ADC = Convert.ToInt32(inputData);
