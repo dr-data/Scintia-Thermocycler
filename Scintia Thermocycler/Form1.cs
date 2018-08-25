@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Text;
 using System.Windows.Forms;
+using System.IO.Ports;
 
 namespace Scintia_Thermocycler
 {
@@ -180,6 +181,33 @@ namespace Scintia_Thermocycler
             if (bWorker.IsBusy)
             {
                 bWorker.CancelAsync();
+                Program.running = false;
+                addSBtn.Enabled = true;
+                addCBtn.Enabled = true;
+                editSelectedBtn.Enabled = true;
+                remSelctedBtn.Enabled = true;
+                runBtn.Enabled = true;
+            }
+        }
+
+        /// <summary>
+        /// Port Data Received
+        /// </summary>
+        private void serialPort1_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            Program.aux += serialPort1.ReadExisting();
+            if (Program.aux[Program.aux.Length - 1] == '\n')
+            {
+                Program.nuevo = Program.aux.Clone() as String;
+                if (Program.readingBottom)
+                {
+                    Program.botTemp = (float) Program.inDataToTemp(Program.nuevo);
+                }
+                else
+                {
+                    Program.topTemp = (float)Program.inDataToTemp(Program.nuevo);
+                }
+                
             }
         }
 
@@ -204,6 +232,7 @@ namespace Scintia_Thermocycler
                     counter = Stopwatch.StartNew();
 
                     // Get Current Top Temperature
+                    Program.readingBottom = false;
                     serialPort1.Write("A");
                     while (!Program.tempRead)
                     {
@@ -211,6 +240,7 @@ namespace Scintia_Thermocycler
                     Program.tempRead = false;
 
                     //Get Current Bottom Temperature
+                    Program.readingBottom = true;
                     serialPort1.Write("B");
                     while (!Program.tempRead)
                     {

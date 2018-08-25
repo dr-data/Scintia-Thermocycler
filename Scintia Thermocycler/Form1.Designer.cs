@@ -29,27 +29,27 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Cycle Name: Main, Repetitions: 1. ");
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series4 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("Cycle Name: Main, Repetitions: 1. ");
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea3 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend3 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series9 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series10 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series11 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series12 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel6 = new System.Windows.Forms.TableLayoutPanel();
             this.addSBtn = new System.Windows.Forms.Button();
             this.addCBtn = new System.Windows.Forms.Button();
+            this.remSelctedBtn = new System.Windows.Forms.Button();
+            this.editSelectedBtn = new System.Windows.Forms.Button();
             this.stepsList = new System.Windows.Forms.TreeView();
             this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
             this.ttChart = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.tableLayoutPanel5 = new System.Windows.Forms.TableLayoutPanel();
             this.stopBtn = new System.Windows.Forms.Button();
             this.runBtn = new System.Windows.Forms.Button();
-            this.remSelctedBtn = new System.Windows.Forms.Button();
-            this.editSelectedBtn = new System.Windows.Forms.Button();
             this.serialPort1 = new System.IO.Ports.SerialPort(this.components);
             this.tableLayoutPanel1.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
@@ -149,15 +149,37 @@
             this.addCBtn.UseVisualStyleBackColor = true;
             this.addCBtn.Click += new System.EventHandler(this.addCBtn_Click);
             // 
+            // remSelctedBtn
+            // 
+            this.remSelctedBtn.Dock = System.Windows.Forms.DockStyle.Right;
+            this.remSelctedBtn.Location = new System.Drawing.Point(647, 3);
+            this.remSelctedBtn.Name = "remSelctedBtn";
+            this.remSelctedBtn.Size = new System.Drawing.Size(144, 38);
+            this.remSelctedBtn.TabIndex = 2;
+            this.remSelctedBtn.Text = "Remove Selected";
+            this.remSelctedBtn.UseVisualStyleBackColor = true;
+            this.remSelctedBtn.Click += new System.EventHandler(this.remSelctedBtn_Click);
+            // 
+            // editSelectedBtn
+            // 
+            this.editSelectedBtn.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.editSelectedBtn.Location = new System.Drawing.Point(241, 3);
+            this.editSelectedBtn.Name = "editSelectedBtn";
+            this.editSelectedBtn.Size = new System.Drawing.Size(113, 38);
+            this.editSelectedBtn.TabIndex = 3;
+            this.editSelectedBtn.Text = "Edit Selected";
+            this.editSelectedBtn.UseVisualStyleBackColor = true;
+            this.editSelectedBtn.Click += new System.EventHandler(this.editSelectedBtn_Click);
+            // 
             // stepsList
             // 
             this.stepsList.Dock = System.Windows.Forms.DockStyle.Fill;
             this.stepsList.Location = new System.Drawing.Point(3, 53);
             this.stepsList.Name = "stepsList";
-            treeNode1.Name = "Root";
-            treeNode1.Text = "Cycle Name: Main, Repetitions: 1. ";
+            treeNode3.Name = "Root";
+            treeNode3.Text = "Cycle Name: Main, Repetitions: 1. ";
             this.stepsList.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode1});
+            treeNode3});
             this.stepsList.Size = new System.Drawing.Size(794, 187);
             this.stepsList.TabIndex = 2;
             // 
@@ -178,33 +200,33 @@
             // 
             // ttChart
             // 
-            chartArea1.Name = "ChartArea1";
-            this.ttChart.ChartAreas.Add(chartArea1);
+            chartArea3.Name = "ChartArea1";
+            this.ttChart.ChartAreas.Add(chartArea3);
             this.ttChart.Dock = System.Windows.Forms.DockStyle.Fill;
-            legend1.Name = "Legend1";
-            this.ttChart.Legends.Add(legend1);
+            legend3.Name = "Legend1";
+            this.ttChart.Legends.Add(legend3);
             this.ttChart.Location = new System.Drawing.Point(3, 3);
             this.ttChart.Name = "ttChart";
-            series1.ChartArea = "ChartArea1";
-            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series1.Legend = "Legend1";
-            series1.Name = "Estimated Top Temp";
-            series2.ChartArea = "ChartArea1";
-            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series2.Legend = "Legend1";
-            series2.Name = "Estimated Bottom Temp";
-            series3.ChartArea = "ChartArea1";
-            series3.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series3.Legend = "Legend1";
-            series3.Name = "Measured Top Temp";
-            series4.ChartArea = "ChartArea1";
-            series4.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series4.Legend = "Legend1";
-            series4.Name = "Measured Bottom Temp";
-            this.ttChart.Series.Add(series1);
-            this.ttChart.Series.Add(series2);
-            this.ttChart.Series.Add(series3);
-            this.ttChart.Series.Add(series4);
+            series9.ChartArea = "ChartArea1";
+            series9.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series9.Legend = "Legend1";
+            series9.Name = "Estimated Top Temp";
+            series10.ChartArea = "ChartArea1";
+            series10.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series10.Legend = "Legend1";
+            series10.Name = "Estimated Bottom Temp";
+            series11.ChartArea = "ChartArea1";
+            series11.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series11.Legend = "Legend1";
+            series11.Name = "Measured Top Temp";
+            series12.ChartArea = "ChartArea1";
+            series12.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series12.Legend = "Legend1";
+            series12.Name = "Measured Bottom Temp";
+            this.ttChart.Series.Add(series9);
+            this.ttChart.Series.Add(series10);
+            this.ttChart.Series.Add(series11);
+            this.ttChart.Series.Add(series12);
             this.ttChart.Size = new System.Drawing.Size(794, 187);
             this.ttChart.TabIndex = 0;
             this.ttChart.Text = "chart1";
@@ -246,27 +268,9 @@
             this.runBtn.UseVisualStyleBackColor = true;
             this.runBtn.Click += new System.EventHandler(this.runBtn_Click);
             // 
-            // remSelctedBtn
+            // serialPort1
             // 
-            this.remSelctedBtn.Dock = System.Windows.Forms.DockStyle.Right;
-            this.remSelctedBtn.Location = new System.Drawing.Point(647, 3);
-            this.remSelctedBtn.Name = "remSelctedBtn";
-            this.remSelctedBtn.Size = new System.Drawing.Size(144, 38);
-            this.remSelctedBtn.TabIndex = 2;
-            this.remSelctedBtn.Text = "Remove Selected";
-            this.remSelctedBtn.UseVisualStyleBackColor = true;
-            this.remSelctedBtn.Click += new System.EventHandler(this.remSelctedBtn_Click);
-            // 
-            // editSelectedBtn
-            // 
-            this.editSelectedBtn.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.editSelectedBtn.Location = new System.Drawing.Point(241, 3);
-            this.editSelectedBtn.Name = "editSelectedBtn";
-            this.editSelectedBtn.Size = new System.Drawing.Size(113, 38);
-            this.editSelectedBtn.TabIndex = 3;
-            this.editSelectedBtn.Text = "Edit Selected";
-            this.editSelectedBtn.UseVisualStyleBackColor = true;
-            this.editSelectedBtn.Click += new System.EventHandler(this.editSelectedBtn_Click);
+            this.serialPort1.PortName = "COM9";
             // 
             // Form1
             // 

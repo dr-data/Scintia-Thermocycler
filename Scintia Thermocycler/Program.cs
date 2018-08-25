@@ -24,6 +24,7 @@ namespace Scintia_Thermocycler
         public static bool OKbtn = false;
         public static bool running = false;
         public static bool tempRead = false;
+        public static bool readingBottom = false;
         /// <summary>
         /// GUI Helpers
         /// </summary>
@@ -38,6 +39,8 @@ namespace Scintia_Thermocycler
         /// <summary>
         /// Temperature Conversion Helpers
         /// </summary>
+        public static string aux;
+        public static string nuevo;
         public static int ADC;
         public static float voltres;
         public static float volttherm;
