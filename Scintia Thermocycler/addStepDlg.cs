@@ -39,7 +39,7 @@ namespace Scintia_Thermocycler
                 }
                 else 
                 {
-                    MessageBox.Show("Temperature must be a floating point number of degree celcius");
+                    MessageBox.Show("Temperature must be a floating point number of degree Celsius");
                 }
             }
             else
