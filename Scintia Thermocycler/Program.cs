@@ -99,8 +99,6 @@ namespace Scintia_Thermocycler
             return Program.Tcelsius;
         }
 
-
-
         /// <summary>
         /// The main entry point for the application.
         /// </summary>

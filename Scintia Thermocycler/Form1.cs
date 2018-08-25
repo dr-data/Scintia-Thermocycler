@@ -220,9 +220,6 @@ namespace Scintia_Thermocycler
             float tempObj;
             int curDur;
             long curTime = 0L;
-            
-            // MessageBox.Show(stepsToDo[0][1].ToString());
-
             while (stepsToDo.Count() > 0)
             {
                 tempObj = stepsToDo[0][0];
