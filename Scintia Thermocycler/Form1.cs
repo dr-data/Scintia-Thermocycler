@@ -180,6 +180,14 @@ namespace Scintia_Thermocycler
         private void stopBtn_Click(object sender, EventArgs e)
         {
             bWorker.CancelAsync();
+            if (serialPort1.IsOpen)
+            {
+                serialPort1.Write("0");
+                serialPort1.Write("1");
+                serialPort1.Write("2");
+                serialPort1.Write("3");
+                serialPort1.Write("4");
+            }
             Program.running = false;
             addSBtn.Enabled = true;
             addCBtn.Enabled = true;
@@ -237,44 +245,42 @@ namespace Scintia_Thermocycler
 
                     // Get Current Top Temperature
                     Program.readingBottom = false;
-                    serialPort1.Write("A");
+                    if (serialPort1.IsOpen)
+                    {
+                        serialPort1.Write("A");
+                    }
                     while (!Program.tempRead)
                     {
-                        Program.aux += serialPort1.ReadExisting();
-                        if (Program.aux[Program.aux.Length - 1] == '\n')
+                        if (serialPort1.IsOpen)
                         {
-                            Program.nuevo = Program.aux.Clone() as String;
-                            if (Program.readingBottom)
+                            Program.aux += serialPort1.ReadExisting();
+                            if (Program.aux[Program.aux.Length - 1] == '\n')
                             {
-                                Program.botTemp = (float)Program.inDataToTemp(Program.nuevo);
-                            }
-                            else
-                            {
+                                Program.nuevo = Program.aux.Clone() as String;
                                 Program.topTemp = (float)Program.inDataToTemp(Program.nuevo);
+                                Program.tempRead = true;
                             }
-                            Program.tempRead = true;
                         }
                     }
                     Program.tempRead = false;
 
                     //Get Current Bottom Temperature
                     Program.readingBottom = true;
-                    serialPort1.Write("B");
+                    if (serialPort1.IsOpen)
+                    {
+                        serialPort1.Write("B");
+                    }
                     while (!Program.tempRead)
                     {
-                        Program.aux += serialPort1.ReadExisting();
-                        if (Program.aux[Program.aux.Length - 1] == '\n')
+                        if (serialPort1.IsOpen)
                         {
-                            Program.nuevo = Program.aux.Clone() as String;
-                            if (Program.readingBottom)
+                            Program.aux += serialPort1.ReadExisting();
+                            if (Program.aux[Program.aux.Length - 1] == '\n')
                             {
+                                Program.nuevo = Program.aux.Clone() as String;
                                 Program.botTemp = (float)Program.inDataToTemp(Program.nuevo);
+                                Program.tempRead = true;
                             }
-                            else
-                            {
-                                Program.topTemp = (float)Program.inDataToTemp(Program.nuevo);
-                            }
-                            Program.tempRead = true;
                         }
                     }
                     Program.tempRead = false;
@@ -282,32 +288,50 @@ namespace Scintia_Thermocycler
                     // Check and Control Top Temp
                     if (Program.topTemp > 92)
                     {
-                        serialPort1.Write("3");
+                        if (serialPort1.IsOpen)
+                        {
+                            serialPort1.Write("3");
+                        }
                     }
                     else if (Program.topTemp < 92)
                     {
-                        serialPort1.Write("8");
+                        if (serialPort1.IsOpen)
+                        {
+                            serialPort1.Write("8");
+                        }
                     }
  
                     // Check and Control Bottom Temp
                     if (Program.botTemp > tempObj)
                     {
-                        serialPort1.Write("4");
+                        if (serialPort1.IsOpen)
+                        {
+                            serialPort1.Write("4");
+                        }
                         if (Program.botTemp > tempObj + Program.tempDropConstant)
                         {
-                            serialPort1.Write("5");
-                            serialPort1.Write("6");
-                            serialPort1.Write("7");
+                            if (serialPort1.IsOpen)
+                            {
+                                serialPort1.Write("5");
+                                serialPort1.Write("6");
+                                serialPort1.Write("7");
+                            }
                         }
                     }
                     else if (Program.botTemp < tempObj)
                     {
-                        serialPort1.Write("9");
+                        if (serialPort1.IsOpen)
+                        {
+                            serialPort1.Write("9");
+                        }
                         if (Program.botTemp < tempObj + Program.tempRaiseConstant)
                         {
-                            serialPort1.Write("0");
-                            serialPort1.Write("1");
-                            serialPort1.Write("2");
+                            if (serialPort1.IsOpen)
+                            {
+                                serialPort1.Write("0");
+                                serialPort1.Write("1");
+                                serialPort1.Write("2");
+                            }
                         }
                     }
 
