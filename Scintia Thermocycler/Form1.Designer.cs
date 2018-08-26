@@ -51,6 +51,7 @@
             this.stopBtn = new System.Windows.Forms.Button();
             this.runBtn = new System.Windows.Forms.Button();
             this.serialPort1 = new System.IO.Ports.SerialPort(this.components);
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.tableLayoutPanel1.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
@@ -276,6 +277,11 @@
             this.serialPort1.StopBits = System.IO.Ports.StopBits.Two;
             this.serialPort1.DataReceived += new System.IO.Ports.SerialDataReceivedEventHandler(this.serialPort1_DataReceived);
             // 
+            // timer1
+            // 
+            this.timer1.Interval = 500;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -312,6 +318,7 @@
         private System.Windows.Forms.Button remSelctedBtn;
         private System.Windows.Forms.Button editSelectedBtn;
         private System.IO.Ports.SerialPort serialPort1;
+        private System.Windows.Forms.Timer timer1;
     }
 }
 

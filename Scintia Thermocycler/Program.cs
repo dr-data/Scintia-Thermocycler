@@ -13,8 +13,12 @@ namespace Scintia_Thermocycler
         /// 
         /// Steinhart Constants
         public static double c1 = 0.001125308852122, c2 = 0.000234711863267, c3 = 0.000000085663516;
+        public static float upperLimit = 2.0F;
+        public static float lowerLimit = 1.0F;
         public static float tempRaiseConstant = 0.0F;
         public static float tempDropConstant = 0.0F;
+        public static float topTempUpperLimit = 94.0F;
+        public static float topTempLowerLimit = 91.0F;
 
         /// <summary>
         /// Global variables.
@@ -24,7 +28,8 @@ namespace Scintia_Thermocycler
         public static bool OKbtn = false;
         public static bool running = false;
         public static bool tempRead = false;
-        public static bool readingBottom = false;
+        public static bool readingBottomTemp = false;
+        public static bool reachedTargetTempFirstTime = false;
         /// <summary>
         /// GUI Helpers
         /// </summary>
@@ -37,21 +42,22 @@ namespace Scintia_Thermocycler
         /// </summary>
         public static List<List<float>> cycleToPerform = new List<List<float>> { };
         /// <summary>
-        /// Temperature Conversion Helpers
+        /// Communication Helpers
         /// </summary>
         public static string aux;
-        public static string nuevo;
-        public static int ADC;
-        public static float voltres;
-        public static float volttherm;
-        public static float Rt;
-        public static double Tc;
-        public static double Tcelsius;
+        public static String nuevo;
         /// <summary>
         /// Step Helpers
         /// </summary>
         public static float topTemp;
         public static float botTemp;
+        public static int currentStepDuration = 0;
+        public static double currentTargetTemperature = 0;
+        /// <summary>
+        /// Timer Helpers
+        /// </summary>
+        public static double residualMilliseconds = 0;
+        public static int timestamp = 0;
         
         /// <summary>
         /// Global functions.
@@ -88,15 +94,35 @@ namespace Scintia_Thermocycler
             }
         }
 
-        public static double inDataToTemp(String inputData)
+        public static List<double> inDataToTemp(String inputData)
         {
-            Program.ADC = Convert.ToInt32(inputData);
-            Program.voltres = ((ADC * 5) / 1023);
-            Program.volttherm = 5 - voltres;
-            Program.Rt = (10000 * ((5 / volttherm) - 1));
-            Program.Tc = (1 / (c1 + (c2 * Math.Log(Rt)) + (c3 * (Math.Log(Rt) * Math.Log(Rt) * Math.Log(Rt)))));
-            Program.Tcelsius = Tc - 273.15;
-            return Program.Tcelsius;
+            List<double> result = new List<double> { };
+            int ADC = Convert.ToInt32(inputData);
+            double voltres = ((ADC * 5) / 1023);
+            double volttherm = 5 - voltres;
+            double Rt = (10000 * ((5 / volttherm) - 1));
+            double Tkelvin = (1 / (c1 + (c2 * Math.Log(Rt)) + (c3 * (Math.Log(Rt) * Math.Log(Rt) * Math.Log(Rt)))));
+            double Tcelsius = Tkelvin - 273.15;
+
+            result.Add(Tcelsius);
+            result.Add(Tkelvin);
+            result.Add(Rt);
+            result.Add(volttherm);
+            result.Add(voltres);
+            result.Add((double)ADC);
+            return result;
+        }
+
+        public static bool tempInRange()
+        {
+            if (botTemp > currentTargetTemperature - lowerLimit)
+            {
+                if (botTemp < currentTargetTemperature + upperLimit)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>
