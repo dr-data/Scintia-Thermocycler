@@ -65,6 +65,12 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="selectPortDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="selectPortDlg.Designer.cs">
+      <DependentUpon>selectPortDlg.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="addCycleDlg.resx">
       <DependentUpon>addCycleDlg.cs</DependentUpon>
     </EmbeddedResource>

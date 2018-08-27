@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using System.Text.RegularExpressions;
 
 namespace Scintia_Thermocycler
 {
@@ -15,8 +16,10 @@ namespace Scintia_Thermocycler
         public static double c1 = 0.001125308852122, c2 = 0.000234711863267, c3 = 0.000000085663516;
         public static float upperLimit = 2.0F;
         public static float lowerLimit = 1.0F;
-        public static float tempRaiseConstant = 0.0F;
-        public static float tempDropConstant = 0.0F;
+        public static float tempRaiseConstant = 1.5F;
+        public static float tempDropConstant = 2.5F;
+        public static float tempNoFanDropConstant = 1.0F;
+        public static float tempOnlyTopRaiseConstant = 1.0F;
         public static float topTempUpperLimit = 94.0F;
         public static float topTempLowerLimit = 91.0F;
 
@@ -27,7 +30,7 @@ namespace Scintia_Thermocycler
         /// </summary>
         public static bool OKbtn = false;
         public static bool running = false;
-        public static bool tempRead = false;
+        public static bool readingPort = false;
         public static bool readingBottomTemp = false;
         public static bool reachedTargetTempFirstTime = false;
         /// <summary>
@@ -45,7 +48,7 @@ namespace Scintia_Thermocycler
         /// Communication Helpers
         /// </summary>
         public static string aux;
-        public static String nuevo;
+        public static string nuevo;
         /// <summary>
         /// Step Helpers
         /// </summary>
@@ -97,8 +100,9 @@ namespace Scintia_Thermocycler
         public static List<double> inDataToTemp(String inputData)
         {
             List<double> result = new List<double> { };
-            int ADC = Convert.ToInt32(inputData);
-            double voltres = ((ADC * 5) / 1023);
+            string testData = Regex.Match(inputData, @"\d+").Value;
+            int ADC = Int32.Parse(testData);
+            double voltres = ((ADC * 5) / 512);
             double volttherm = 5 - voltres;
             double Rt = (10000 * ((5 / volttherm) - 1));
             double Tkelvin = (1 / (c1 + (c2 * Math.Log(Rt)) + (c3 * (Math.Log(Rt) * Math.Log(Rt) * Math.Log(Rt)))));

@@ -27,6 +27,7 @@ namespace Scintia_Thermocycler
             counter = new Stopwatch();
             bWorker = new BackgroundWorker();
             bWorker.DoWork += new DoWorkEventHandler(bWorker_DoWork);
+            bWorker.ProgressChanged += new ProgressChangedEventHandler(bWorker_ProgressChanged);
             bWorker.WorkerSupportsCancellation = true;
             bWorker.WorkerReportsProgress = true;
             if (!serialPort1.IsOpen)
@@ -170,8 +171,8 @@ namespace Scintia_Thermocycler
             Program.running = true;
             disableAllButtons();
             Program.TraverseTree(stepsList.Nodes);
-            // timer1.Enabled = true;
-            timer1.Start();
+            predictGraph(Program.cycleToPerform);
+            bWorker.RunWorkerAsync();
         }
 
         /// <summary>
@@ -179,16 +180,14 @@ namespace Scintia_Thermocycler
         /// </summary>
         private void stopBtn_Click(object sender, EventArgs e)
         {
-            timer1.Stop();
             bWorker.CancelAsync();
-            if (serialPort1.IsOpen)
-            {
-                serialPort1.Write("0");
-                serialPort1.Write("1");
-                serialPort1.Write("2");
-                serialPort1.Write("3");
-                serialPort1.Write("4");
-            }
+            checkIfPortIsOpen();
+            serialPort1.Write("0");
+            serialPort1.Write("1");
+            serialPort1.Write("2");
+            serialPort1.Write("3");
+            serialPort1.Write("4");
+            enableAllButtons();
             Program.running = false;
         }
 
@@ -197,6 +196,7 @@ namespace Scintia_Thermocycler
         /// </summary>
         private void serialPort1_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
+            Program.readingPort = true;
             Program.aux += serialPort1.ReadExisting();
             if (Program.aux[Program.aux.Length - 1] == '\n')
             {
@@ -208,68 +208,9 @@ namespace Scintia_Thermocycler
                 else
                 {
                     Program.topTemp = (float) Program.inDataToTemp(Program.nuevo)[0];
-                }                
-            }
-        }
-
-        /// <summary>
-        /// Timer Function
-        /// </summary>
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-            counter.Start();
-            if (Program.running)
-            {
-                if (Program.cycleToPerform.Count == 0 && Program.currentStepDuration <= 0)
-                {
-                    Program.running = false;
-                    enableAllButtons();
-                    timer1.Stop();
                 }
-                else if (Program.cycleToPerform.Count >= 0)
-                {
-                    if (Program.currentStepDuration <= 0 && Program.cycleToPerform.Count > 0)
-                    {
-                        Program.currentTargetTemperature = Program.cycleToPerform[0][0];
-                        Program.currentStepDuration = (int) Program.cycleToPerform[0][1] * 1000;
-                        Program.reachedTargetTempFirstTime = false;
-                        Program.cycleToPerform.RemoveAt(0);
-                    }
-                    if (!serialPort1.IsOpen)
-                    {
-                        try
-                        {
-                            serialPort1.Open();
-                        }
-                        catch (System.Exception ex)
-                        {
-                            MessageBox.Show(ex.ToString());
-                        }
-                    }
-                    updateTopTemp();
-                    updateBottomTemp();
-                    if (bWorker.IsBusy != true)
-                    {
-                        bWorker.RunWorkerAsync();
-                    }
-                    updateGraph(Program.timestamp);
-                    Program.timestamp += 500;
-                    if (Program.reachedTargetTempFirstTime)
-                    {
-                        Program.currentStepDuration -= 500;
-                    }
-                    counter.Stop();
-                    Program.residualMilliseconds += counter.ElapsedMilliseconds;
-                    if (Program.residualMilliseconds >= 1)
-                    {
-                        Program.timestamp += (int) Program.residualMilliseconds;
-                        if (Program.reachedTargetTempFirstTime)
-                        {
-                            Program.currentStepDuration -= (int) Program.residualMilliseconds;
-                        }
-                        Program.residualMilliseconds = 0;
-                    }
-                }
+                Program.aux = "";
+                Program.readingPort = false;
             }
         }
 
@@ -280,12 +221,25 @@ namespace Scintia_Thermocycler
         {
             while (Program.running)
             {
+                if (Program.cycleToPerform.Count == 0 && Program.currentStepDuration <= 0)
+                {
+                    bWorker.CancelAsync();
+                }
                 if (bWorker.CancellationPending)
                 {
                     e.Cancel = true;
                 }
-                else
+                else if (Program.cycleToPerform.Count >= 0)
                 {
+                    counter.Start();
+                    if (Program.currentStepDuration <= 0 && Program.cycleToPerform.Count > 0)
+                    {
+                        Program.currentTargetTemperature = Program.cycleToPerform[0][0];
+                        Program.currentStepDuration = (int) Program.cycleToPerform[0][1] * 1000;
+                        Program.reachedTargetTempFirstTime = false;
+                        Program.cycleToPerform.RemoveAt(0);
+                    }
+
                     int stateBottom = 0;
                     int stateTop = 0;
                     if (!Program.reachedTargetTempFirstTime && Program.tempInRange())
@@ -316,69 +270,191 @@ namespace Scintia_Thermocycler
                     {
                         stateTop = 2;
                     }
-                    bWorker.ReportProgress(stateBottom, stateTop);
+                    counter.Stop();
+                    if (Program.timestamp % 500 == 0)
+                    {
+                        updateTopTemp();
+                        updateBottomTemp();
+                        switch (stateBottom)
+                        {
+                            case 0:
+                                break;
+
+                            case 1:
+                                if (!Program.readingPort)
+                                {
+                                    turnBottomROff();
+                                }
+                                break;
+
+                            case 2:
+                                if (!Program.readingPort)
+                                {
+                                    turnBottomROff();
+                                    turnAllFansOn();
+                                }
+                                break;
+
+                            case 3:
+                                if (!Program.readingPort)
+                                {
+                                    turnBottomROn();
+                                }
+                                break;
+
+                            case 4:
+                                if (!Program.readingPort)
+                                {
+                                    turnBottomROn();
+                                    turnAllFansOff();
+                                }
+                                break;
+                        }
+
+                        switch (stateTop)
+                        {
+                            case 0:
+                                break;
+
+                            case 1:
+                                if (!Program.readingPort)
+                                {
+                                    turnTopROff();
+                                }
+                                break;
+
+                            case 2:
+                                if (!Program.readingPort)
+                                {
+                                    turnTopROn();
+                                }
+                                break;
+                        }
+                        bWorker.ReportProgress(stateBottom, stateTop);
+                    }
                 }
             }
         }
 
         private void bWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            if (!serialPort1.IsOpen)
+            MessageBox.Show(Program.timestamp.ToString());
+            updateGraph(Program.timestamp);
+            Program.timestamp += 500;
+            if (Program.reachedTargetTempFirstTime)
             {
-                try
+                Program.currentStepDuration -= 500;
+            }
+
+            Program.residualMilliseconds += counter.ElapsedMilliseconds;
+            if (Program.residualMilliseconds >= 1)
+            {
+                Program.timestamp += (int)Program.residualMilliseconds;
+                if (Program.reachedTargetTempFirstTime)
                 {
-                    serialPort1.Open();
+                    Program.currentStepDuration -= (int)Program.residualMilliseconds;
                 }
-                catch (System.Exception ex)
+                Program.residualMilliseconds = 0;
+            }
+        }
+
+        private void predictGraph(List<List<float>> stepList)
+        {
+            List<List<float>> innerList = new List<List<float>>(stepList);
+            double expectedDur = 0;
+            double expectedTargetTemp = 0;
+            double expectedTopTemp = 0;
+            double expectedBotTemp = 0;
+            bool innerReachTargetTemp = false;
+            updateTopTemp();
+            updateBottomTemp();
+            double time = 0;
+
+            ttChart.Series["Estimated Top Temp"].Points.AddXY(time, Program.topTemp);
+            ttChart.Series["Estimated Bottom Temp"].Points.AddXY(time, Program.botTemp);
+
+            expectedTopTemp = Program.topTemp;
+            expectedBotTemp = Program.botTemp;
+
+            while (innerList.Count >= 0)
+            {
+                if (innerList.Count == 0 && expectedDur <= 0)
                 {
-                    MessageBox.Show(ex.ToString());
+                    break;
+                }
+                else
+                {
+                    if (expectedDur == 0)
+                    {
+                        expectedTargetTemp = stepList[0][0];
+                        expectedDur = stepList[0][1] * 1000;
+                        innerReachTargetTemp = false;
+                        innerList.RemoveAt(0);
+                    }
+                    if (!innerReachTargetTemp && ((expectedBotTemp > (expectedTargetTemp - Program.lowerLimit)) && (expectedBotTemp < (expectedTargetTemp + Program.upperLimit))))
+                    {
+                        innerReachTargetTemp = true;
+                    }
+
+                    if (expectedBotTemp > expectedTargetTemp)
+                    {
+                        if (expectedBotTemp > expectedTargetTemp + Program.tempDropConstant)
+                        {
+                            expectedBotTemp -= Program.tempDropConstant / 2;
+                            expectedTopTemp -= ((Program.tempOnlyTopRaiseConstant - 0.05) / 2);
+                        }
+                        else
+                        {
+                            expectedBotTemp -= Program.tempNoFanDropConstant / 2;
+                            expectedTopTemp -= ((Program.tempOnlyTopRaiseConstant - 0.05) / 2);
+                        }
+                    }
+                    else
+                    {
+                        if (expectedBotTemp < expectedTargetTemp)
+                        {
+                            if (expectedBotTemp < expectedTargetTemp - Program.tempRaiseConstant)
+                            {
+                                expectedBotTemp += Program.tempRaiseConstant / 2;
+                                expectedTopTemp += ((Program.tempOnlyTopRaiseConstant - 0.05) / 2);
+                            }
+                            else
+                            {
+                                expectedBotTemp += Program.tempOnlyTopRaiseConstant / 2;
+                                expectedTopTemp += Program.tempOnlyTopRaiseConstant / 2;
+                            }
+                        }
+                    }
+
+                    if(expectedTopTemp > 92)
+                    {
+                        expectedTopTemp -= Program.tempNoFanDropConstant / 2;
+                    }
+                    else
+                    {
+                        expectedTopTemp += Program.tempOnlyTopRaiseConstant / 2;
+                    }
+
+                    ttChart.Series["Estimated Top Temp"].Points.AddXY(time / 1000, expectedTopTemp);
+                    ttChart.Series["Estimated Bottom Temp"].Points.AddXY(time / 1000, expectedBotTemp);
+
+                    time += 500;
+                    if (innerReachTargetTemp)
+                    {
+                        expectedDur -= 500;
+                    }
                 }
             }
-
-            switch (e.ProgressPercentage)
-            {
-                case 0:    
-                break;
-                
-                case 1:
-                turnBottomROff();
-                break;
-
-                case 2:
-                turnBottomROff();
-                turnAllFansOn();
-                break;
-
-                case 3:
-                turnBottomROn();
-                break;
-
-                case 4:
-                turnBottomROn();
-                turnAllFansOff();
-                break;
-            }
-
-            switch ((int) e.UserState)
-            {
-                case 0:
-                break;
-
-                case 1:
-                turnTopROff();
-                break;
-
-                case 2:
-                turnTopROn();
-                break;
-            }
-            
+            ttChart.ChartAreas[0].AxisX.ScaleView.Zoom(0, time/1000);
+            ttChart.ChartAreas[0].AxisX.ScaleView.Zoomable = true;
+            ttChart.ChartAreas[0].AxisY.ScaleView.Zoom(0, 120);
+            ttChart.Refresh();
         }
 
         private void updateGraph(double timestamp)
         {
-            ttChart.Series[2].Points.AddXY( timestamp / 1000, (double) Program.topTemp);
-            ttChart.Series[3].Points.AddXY( timestamp / 1000, (double) Program.botTemp);
+            ttChart.Series["Measured Top Temp"].Points.AddXY( timestamp / 1000, (double) Program.topTemp);
+            ttChart.Series["Measured Bottom Temp"].Points.AddXY( timestamp / 1000, (double) Program.botTemp);
             ttChart.Refresh();
         }
 
@@ -400,16 +476,39 @@ namespace Scintia_Thermocycler
             runBtn.Enabled = false;
         }
 
+        private void checkIfPortIsOpen()
+        {
+            if (!serialPort1.IsOpen)
+            {
+                try
+                {
+                    serialPort1.Open();
+                }
+                catch (System.Exception ex)
+                {
+                    // MessageBox.Show(ex.ToString());
+                }
+            }
+        }
+
         private void updateTopTemp()
         {
-            Program.readingBottomTemp = false;
-            serialPort1.Write("A");
+            if (!Program.readingPort)
+            {
+                checkIfPortIsOpen();
+                Program.readingBottomTemp = false;
+                serialPort1.Write("A");
+            }
         }
 
         private void updateBottomTemp()
         {
-            Program.readingBottomTemp = true;
-            serialPort1.Write("B");
+            if (!Program.readingPort)
+            {
+                checkIfPortIsOpen();
+                Program.readingBottomTemp = true;
+                serialPort1.Write("B");
+            }
         }
 
         private void turnTopROn()
