@@ -1,0 +1,10 @@
+D:\Documents\Visual Studio 2012\Projects\UI Final\Git Scintia Thermocycler\Scintia-Thermocycler\Scintia Thermocycler\bin\Release\Scintia Thermocycler.exe
+D:\Documents\Visual Studio 2012\Projects\UI Final\Git Scintia Thermocycler\Scintia-Thermocycler\Scintia Thermocycler\bin\Release\Scintia Thermocycler.pdb
+D:\Documents\Visual Studio 2012\Projects\UI Final\Git Scintia Thermocycler\Scintia-Thermocycler\Scintia Thermocycler\obj\Release\Scintia Thermocycler.csprojResolveAssemblyReference.cache
+D:\Documents\Visual Studio 2012\Projects\UI Final\Git Scintia Thermocycler\Scintia-Thermocycler\Scintia Thermocycler\obj\Release\Scintia_Thermocycler.addCycleDlg.resources
+D:\Documents\Visual Studio 2012\Projects\UI Final\Git Scintia Thermocycler\Scintia-Thermocycler\Scintia Thermocycler\obj\Release\Scintia_Thermocycler.Form1.resources
+D:\Documents\Visual Studio 2012\Projects\UI Final\Git Scintia Thermocycler\Scintia-Thermocycler\Scintia Thermocycler\obj\Release\Scintia_Thermocycler.addStepDlg.resources
+D:\Documents\Visual Studio 2012\Projects\UI Final\Git Scintia Thermocycler\Scintia-Thermocycler\Scintia Thermocycler\obj\Release\Scintia_Thermocycler.Properties.Resources.resources
+D:\Documents\Visual Studio 2012\Projects\UI Final\Git Scintia Thermocycler\Scintia-Thermocycler\Scintia Thermocycler\obj\Release\Scintia Thermocycler.csproj.GenerateResource.Cache
+D:\Documents\Visual Studio 2012\Projects\UI Final\Git Scintia Thermocycler\Scintia-Thermocycler\Scintia Thermocycler\obj\Release\Scintia Thermocycler.exe
+D:\Documents\Visual Studio 2012\Projects\UI Final\Git Scintia Thermocycler\Scintia-Thermocycler\Scintia Thermocycler\obj\Release\Scintia Thermocycler.pdb

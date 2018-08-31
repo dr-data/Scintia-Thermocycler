@@ -18,18 +18,12 @@ namespace Scintia_Thermocycler
         /// <summary>
         /// Internal Helpers.
         /// </summary>
-        BackgroundWorker bWorker;
         Stopwatch counter;
 
         public Form1()
         {
             InitializeComponent();
             counter = new Stopwatch();
-            bWorker = new BackgroundWorker();
-            bWorker.DoWork += new DoWorkEventHandler(bWorker_DoWork);
-            bWorker.ProgressChanged += new ProgressChangedEventHandler(bWorker_ProgressChanged);
-            bWorker.WorkerSupportsCancellation = true;
-            bWorker.WorkerReportsProgress = true;
             if (!serialPort1.IsOpen)
             {
                 try
@@ -156,6 +150,37 @@ namespace Scintia_Thermocycler
         {
             if (!Program.running)
             {
+                if (stepsList.SelectedNode == null)
+                {
+                    MessageBox.Show("Select an element to edit");
+                }
+                else if (stepsList.SelectedNode.Text.Contains("Temperature"))
+                {
+                    addStepDlg addstep = new addStepDlg();
+                    addstep.Text = "Editing Step";
+                    addstep.ShowDialog();
+                    if (Program.OKbtn)
+                    {
+                        float temperature, duration;
+                        float.TryParse(Program.stepTemperature, out temperature);
+                        float.TryParse(Program.stepDuration, out duration);
+                        stepsList.SelectedNode.Text = "Temperature: " + Program.stepTemperature + " °C, Duration: " + Program.stepDuration + " s";
+                        stepsList.Tag = new List<float> { temperature, duration };
+                    }
+                }
+                else
+                {
+                    addCycleDlg addCycle = new addCycleDlg();
+                    addCycle.Text = "Editing Cycle";
+                    addCycle.ShowDialog();
+                    if (Program.OKbtn)
+                    {
+                        int repetitions;
+                        int.TryParse(Program.cycleReps, out repetitions);
+                        stepsList.SelectedNode.Text = "Cycle Name: " + Program.cycleName + ", Repetitions: " + Program.cycleReps;
+                        stepsList.Tag = repetitions;
+                    }
+                }
             }
             else
             {
@@ -169,10 +194,25 @@ namespace Scintia_Thermocycler
         private void runBtn_Click(object sender, EventArgs e)
         {
             Program.running = true;
+            checkIfPortIsOpen();
+            turnAllFansOff();
+            turnTopROff();
+            turnBottomROff();
             disableAllButtons();
+            foreach(var series in ttChart.Series) {
+                series.Points.Clear();
+            }
+            ttChart.Refresh();
+            Program.timestamp = 0;
+            Program.topTemp = 0;
+            Program.botTemp = 0;
+            if (Program.cycleToPerform.Count > 0)
+            {
+                Program.cycleToPerform.RemoveRange(0, Program.cycleToPerform.Count - 1);
+            }
             Program.TraverseTree(stepsList.Nodes);
             predictGraph(Program.cycleToPerform);
-            bWorker.RunWorkerAsync();
+            bgw.RunWorkerAsync();
         }
 
         /// <summary>
@@ -180,7 +220,7 @@ namespace Scintia_Thermocycler
         /// </summary>
         private void stopBtn_Click(object sender, EventArgs e)
         {
-            bWorker.CancelAsync();
+            bgw.CancelAsync();
             checkIfPortIsOpen();
             serialPort1.Write("0");
             serialPort1.Write("1");
@@ -198,16 +238,15 @@ namespace Scintia_Thermocycler
         {
             Program.readingPort = true;
             Program.aux += serialPort1.ReadExisting();
-            if (Program.aux[Program.aux.Length - 1] == '\n')
+            if (Program.aux[Program.aux.Length-1]=='\n')
             {
-                Program.nuevo = Program.aux.Clone() as String;
-                if (Program.readingBottomTemp)
+                if (!Program.turn)
                 {
-                    Program.botTemp = (float) Program.inDataToTemp(Program.nuevo)[0];
+                    Program.botTemp = Program.inDataToTemp();
                 }
                 else
                 {
-                    Program.topTemp = (float) Program.inDataToTemp(Program.nuevo)[0];
+                    Program.topTemp = Program.inDataToTemp();
                 }
                 Program.aux = "";
                 Program.readingPort = false;
@@ -217,144 +256,192 @@ namespace Scintia_Thermocycler
         /// <summary>
         /// DoWork Background Thread Function.
         /// </summary>
-        private void bWorker_DoWork(object sender, DoWorkEventArgs e)
+        private void bgw_DoWork(object sender, DoWorkEventArgs e)
         {
+            // The first time this is invoked preheat the top resistor
+            Program.preheat = true;
+            // If the program is running, do the following
             while (Program.running)
             {
-                if (Program.cycleToPerform.Count == 0 && Program.currentStepDuration <= 0)
+                // If cancelation was called
+                if (bgw.CancellationPending)
                 {
-                    bWorker.CancelAsync();
-                }
-                if (bWorker.CancellationPending)
-                {
+                    // Program is no longer running
+                    Program.running = false;
                     e.Cancel = true;
                 }
+                // If there are no more steps to go through and the duration of the last step is over
+                if (Program.cycleToPerform.Count == 0 && Program.currentStepDuration <= 0)
+                {
+                    // Program is no longer running
+                    Program.running = false;
+                    return;
+                }
+                // Otherwise, if there are steps yet to do
                 else if (Program.cycleToPerform.Count >= 0)
                 {
+                    // Start counting process time
                     counter.Start();
-                    if (Program.currentStepDuration <= 0 && Program.cycleToPerform.Count > 0)
+                    // Preheat the top resistance
+                    if (Program.preheat)
                     {
-                        Program.currentTargetTemperature = Program.cycleToPerform[0][0];
-                        Program.currentStepDuration = (int) Program.cycleToPerform[0][1] * 1000;
-                        Program.reachedTargetTempFirstTime = false;
-                        Program.cycleToPerform.RemoveAt(0);
-                    }
-
-                    int stateBottom = 0;
-                    int stateTop = 0;
-                    if (!Program.reachedTargetTempFirstTime && Program.tempInRange())
-                    {
-                        Program.reachedTargetTempFirstTime = true;
-                    }
-                    if (Program.botTemp > Program.currentTargetTemperature)
-                    {
-                        stateBottom = 1;
-                        if (Program.botTemp > Program.currentTargetTemperature + Program.tempDropConstant)
+                        if (Program.fansOn)
                         {
-                            stateBottom = 2;
+                            turnAllFansOff();
+                        }
+                        if (Program.botROn)
+                        {
+                            turnBottomROff();
+                        }
+                        if (!Program.topROn)
+                        {
+                            turnTopROn();
+                        }
+                        if (Program.topTemp >= ((Program.topTempUpperLimit + Program.topTempLowerLimit) / 2))
+                        {
+                            Program.preheat = false;
                         }
                     }
-                    else if (Program.botTemp < Program.currentTargetTemperature)
+                    // Enter the main steps list
+                    else
                     {
-                        stateBottom = 3;
-                        if (Program.botTemp < Program.currentTargetTemperature - Program.tempRaiseConstant)
+                        // If this isn't the last step and duration is over
+                        if (Program.cycleToPerform.Count > 0 && Program.currentStepDuration <= 0)
                         {
-                            stateBottom = 4;
+                            // Reset reachedTargetTempFirstTime flag
+                            Program.reachedTargetTempFirstTime = false;
+                            // Load the next target temperature
+                            Program.currentTargetTemperature = Program.cycleToPerform[0][0];
+                            // Load the next step duration in miliseconds
+                            Program.currentStepDuration = (int)Program.cycleToPerform[0][1] * 1000;
+                            // Take out step at index 0
+                            Program.cycleToPerform.RemoveAt(0);
                         }
-                    }
-                    if (Program.topTemp > Program.topTempUpperLimit)
-                    {
-                        stateTop = 1;
-                    }
-                    else if (Program.topTemp < Program.topTempLowerLimit)
-                    {
-                        stateTop = 2;
-                    }
-                    counter.Stop();
-                    if (Program.timestamp % 500 == 0)
-                    {
-                        updateTopTemp();
-                        updateBottomTemp();
-                        switch (stateBottom)
+                        // Check if temperature is in range
+                        if (Program.tempInRange())
                         {
-                            case 0:
-                                break;
-
-                            case 1:
-                                if (!Program.readingPort)
+                            // We've reached it for the first time so we can start counting duration
+                            Program.reachedTargetTempFirstTime = true;
+                        }
+                        // Let's take turns on temperatures, true for top, false for bottom
+                        if (Program.turn)
+                        {
+                            // Get top temperature updated
+                            updateTopTemp();
+                            // Wait for port to be read
+                            Thread.Sleep(100);
+                            while (Program.readingPort)
+                            {
+                            }
+                            // Make decisions on the updated temperature
+                            if (Program.topTemp >= Program.topTempUpperLimit)
+                            {
+                                turnTopROff();
+                            }
+                            else if (Program.topTemp <= Program.topTempLowerLimit)
+                            {
+                                turnTopROn();
+                            }
+                            // Change turns
+                            Program.turn = false;
+                        }
+                        else
+                        {
+                            // Update bottom temperature
+                            updateBottomTemp();
+                            // Wait for port to be read
+                            Thread.Sleep(100);
+                            while (Program.readingPort)
+                            {
+                            }
+                            // Make decisions on the updated temperature
+                            if (Program.botTemp >= Program.currentTargetTemperature)
+                            {
+                                turnBottomROff();
+                                if (Program.botTemp > Program.currentTargetTemperature + Program.tempDropConstant)
                                 {
-                                    turnBottomROff();
-                                }
-                                break;
-
-                            case 2:
-                                if (!Program.readingPort)
-                                {
-                                    turnBottomROff();
                                     turnAllFansOn();
                                 }
-                                break;
-
-                            case 3:
-                                if (!Program.readingPort)
+                            }
+                            else
+                            {
+                                turnAllFansOff();
+                                if (Program.botTemp < Program.currentTargetTemperature - Program.tempRaiseConstant)
                                 {
                                     turnBottomROn();
                                 }
-                                break;
-
-                            case 4:
-                                if (!Program.readingPort)
-                                {
-                                    turnBottomROn();
-                                    turnAllFansOff();
-                                }
-                                break;
+                            }
+                            // Change turns
+                            Program.turn = true;
                         }
-
-                        switch (stateTop)
-                        {
-                            case 0:
-                                break;
-
-                            case 1:
-                                if (!Program.readingPort)
-                                {
-                                    turnTopROff();
-                                }
-                                break;
-
-                            case 2:
-                                if (!Program.readingPort)
-                                {
-                                    turnTopROn();
-                                }
-                                break;
-                        }
-                        bWorker.ReportProgress(stateBottom, stateTop);
+                        // Stop counter and report Progress
+                        counter.Stop();
+                        bgw.ReportProgress(0);
+                        // Wait before working again                    
+                        Thread.Sleep(100);
                     }
                 }
             }
         }
-
-        private void bWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        
+        /// <summary>
+        /// ReportProgress Background Thread Function
+        /// </summary>
+        private void bgw_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            MessageBox.Show(Program.timestamp.ToString());
-            updateGraph(Program.timestamp);
-            Program.timestamp += 500;
-            if (Program.reachedTargetTempFirstTime)
-            {
-                Program.currentStepDuration -= 500;
-            }
-
+            // Update timestamp with the time the step took
             Program.residualMilliseconds += counter.ElapsedMilliseconds;
             if (Program.residualMilliseconds >= 1)
             {
                 Program.timestamp += (int)Program.residualMilliseconds;
-                if (Program.reachedTargetTempFirstTime)
+            }
+            // Update graph with the current timestamp
+            updateGraph(Program.timestamp);
+            // Consider that the next time this function is called, the worker slept for 100ms
+            Program.timestamp += 100;
+            // Update currentStepDuration only if we have reached the target temp before
+            if (Program.reachedTargetTempFirstTime)
+            {
+                Program.currentStepDuration -= 100;
+                if (Program.residualMilliseconds >= 1)
                 {
                     Program.currentStepDuration -= (int)Program.residualMilliseconds;
+                    Program.residualMilliseconds = 0;
                 }
-                Program.residualMilliseconds = 0;
+            }
+        }
+
+        /// <summary>
+        /// Background Thread Completed Function
+        /// </summary>
+        private void bgw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Cancelled == true)
+            {
+                Program.running = false;
+                turnAllFansOff();
+                turnBottomROff();
+                turnTopROff();
+                enableAllButtons();
+                MessageBox.Show("Stopped the cycle.");
+            }
+            else if (e.Error != null)
+            {
+                Program.running = false;
+                turnAllFansOff();
+                turnBottomROff();
+                turnTopROff();
+                enableAllButtons();
+                MessageBox.Show("Error: " + e.Error.Message);
+            }
+            else
+            {
+                Program.running = false;
+                turnAllFansOff();
+                turnBottomROff();
+                turnTopROff();
+                enableAllButtons();
+                MessageBox.Show("Background work finished successfully");
             }
         }
 
@@ -366,8 +453,16 @@ namespace Scintia_Thermocycler
             double expectedTopTemp = 0;
             double expectedBotTemp = 0;
             bool innerReachTargetTemp = false;
+
+            ttChart.ChartAreas[0].AxisX.ScaleView.Zoomable = true;
+            ttChart.ChartAreas[0].AxisY.ScaleView.Zoom(0, 120);
+
             updateTopTemp();
+            while (Program.readingPort)
+            { Thread.Sleep(5); }
             updateBottomTemp();
+            while (Program.readingPort)
+            { Thread.Sleep(5); }
             double time = 0;
 
             ttChart.Series["Estimated Top Temp"].Points.AddXY(time, Program.topTemp);
@@ -437,7 +532,7 @@ namespace Scintia_Thermocycler
 
                     ttChart.Series["Estimated Top Temp"].Points.AddXY(time / 1000, expectedTopTemp);
                     ttChart.Series["Estimated Bottom Temp"].Points.AddXY(time / 1000, expectedBotTemp);
-
+                    ttChart.Refresh();
                     time += 500;
                     if (innerReachTargetTemp)
                     {
@@ -446,9 +541,6 @@ namespace Scintia_Thermocycler
                 }
             }
             ttChart.ChartAreas[0].AxisX.ScaleView.Zoom(0, time/1000);
-            ttChart.ChartAreas[0].AxisX.ScaleView.Zoomable = true;
-            ttChart.ChartAreas[0].AxisY.ScaleView.Zoom(0, 120);
-            ttChart.Refresh();
         }
 
         private void updateGraph(double timestamp)
@@ -493,46 +585,41 @@ namespace Scintia_Thermocycler
 
         private void updateTopTemp()
         {
-            if (!Program.readingPort)
-            {
-                checkIfPortIsOpen();
-                Program.readingBottomTemp = false;
-                serialPort1.Write("A");
-            }
+            serialPort1.Write("A");
         }
 
         private void updateBottomTemp()
         {
-            if (!Program.readingPort)
-            {
-                checkIfPortIsOpen();
-                Program.readingBottomTemp = true;
-                serialPort1.Write("B");
-            }
+            serialPort1.Write("B");
         }
 
         private void turnTopROn()
         {
-            serialPort1.Write("8");
+                Program.topROn = true;
+                serialPort1.Write("8");
         }
 
         private void turnTopROff()
         {
+            Program.topROn = false;
             serialPort1.Write("3");
         }
 
         private void turnBottomROn()
         {
+            Program.botROn = true;
             serialPort1.Write("9");
         }
 
         private void turnBottomROff()
         {
+            Program.botROn = false;
             serialPort1.Write("4");
         }
 
         private void turnAllFansOn()
         {
+            Program.fansOn = true;
             serialPort1.Write("5");
             serialPort1.Write("6");
             serialPort1.Write("7");
@@ -540,6 +627,7 @@ namespace Scintia_Thermocycler
 
         private void turnAllFansOff()
         {
+            Program.fansOn = false;
             serialPort1.Write("0");
             serialPort1.Write("1");
             serialPort1.Write("2");

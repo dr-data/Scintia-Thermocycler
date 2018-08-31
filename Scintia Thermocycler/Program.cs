@@ -10,18 +10,31 @@ namespace Scintia_Thermocycler
     {
         /// <summary>
         /// Program Constants
-        /// </summary>
-        /// 
+        /// -------------------
         /// Steinhart Constants
+        /// </summary>
         public static double c1 = 0.001125308852122, c2 = 0.000234711863267, c3 = 0.000000085663516;
-        public static float upperLimit = 2.0F;
-        public static float lowerLimit = 1.0F;
-        public static float tempRaiseConstant = 1.5F;
-        public static float tempDropConstant = 2.5F;
-        public static float tempNoFanDropConstant = 1.0F;
-        public static float tempOnlyTopRaiseConstant = 1.0F;
-        public static float topTempUpperLimit = 94.0F;
-        public static float topTempLowerLimit = 91.0F;
+        public static float ADC; //valor del ADC
+        public static float voltajeres; //voltaje de la res10k
+        public static float voltajetherm; // voltaje del termistor
+        public static float Rt; //Valor de resistencia del termistor actual
+        public static double Tc; //temperatura en Celsius
+        public static double Tcelsius;
+        public static string temperatura;
+        /// <summary>
+        /// Tolerance Constants
+        /// </summary>
+        public static double upperLimit = 2.0F;
+        public static double lowerLimit = 1.0F;
+        public static double topTempUpperLimit = 98.0F;
+        public static double topTempLowerLimit = 91.0F;
+        /// <summary>
+        /// Thermal speed constants
+        /// </summary>
+        public static double tempRaiseConstant = 1.5F;
+        public static double tempDropConstant = 2.5F;
+        public static double tempNoFanDropConstant = 1.0F;
+        public static double tempOnlyTopRaiseConstant = 1.0F;
 
         /// <summary>
         /// Global variables.
@@ -30,9 +43,17 @@ namespace Scintia_Thermocycler
         /// </summary>
         public static bool OKbtn = false;
         public static bool running = false;
-        public static bool readingPort = false;
-        public static bool readingBottomTemp = false;
+        public static bool turn = false;
+        public static bool reachedTopTemp = false;
         public static bool reachedTargetTempFirstTime = false;
+        public static bool preheat = false;
+        /// <summary>
+        /// Components states
+        /// </summary>
+        public static bool readingPort = false;
+        public static bool fansOn = false;
+        public static bool topROn = false;
+        public static bool botROn = false;
         /// <summary>
         /// GUI Helpers
         /// </summary>
@@ -52,8 +73,8 @@ namespace Scintia_Thermocycler
         /// <summary>
         /// Step Helpers
         /// </summary>
-        public static float topTemp;
-        public static float botTemp;
+        public static double topTemp;
+        public static double botTemp;
         public static int currentStepDuration = 0;
         public static double currentTargetTemperature = 0;
         /// <summary>
@@ -67,54 +88,27 @@ namespace Scintia_Thermocycler
         /// </summary>
         public static void TraverseTree(TreeNodeCollection nodes)
         {
-            foreach (TreeNode child in nodes)
+            foreach (TreeNode node in nodes)
             {
-                addToStep(child);
-                TraverseTree(child.Nodes);
+                addToStep(node);
             }
         }
 
         public static void addToStep(TreeNode node)
         {
-            if (node.Name == "Root")
-            {
-                return;
-            }
-            else if (node.Text.Contains("Cycle Name"))
+            if (node.Text.Contains("Cycle Name") && node.Name != "Root")
             {
                 int reps = 0;
-                while(reps < (int)node.Tag){
-                    foreach (TreeNode child in node.Nodes)
-                    {
-                        addToStep(child);
-                    }
+                while(reps < (int)node.Tag)
+                {
+                    TraverseTree(node.Nodes);
                     reps++;
                 }
             }
-            else if (node.Text.Contains("Temperature") && node.Parent.Name == "Root")
+            else if (node.Text.Contains("Temperature"))
             {
                 cycleToPerform.Add((List<float>)node.Tag);
             }
-        }
-
-        public static List<double> inDataToTemp(String inputData)
-        {
-            List<double> result = new List<double> { };
-            string testData = Regex.Match(inputData, @"\d+").Value;
-            int ADC = Int32.Parse(testData);
-            double voltres = ((ADC * 5) / 512);
-            double volttherm = 5 - voltres;
-            double Rt = (10000 * ((5 / volttherm) - 1));
-            double Tkelvin = (1 / (c1 + (c2 * Math.Log(Rt)) + (c3 * (Math.Log(Rt) * Math.Log(Rt) * Math.Log(Rt)))));
-            double Tcelsius = Tkelvin - 273.15;
-
-            result.Add(Tcelsius);
-            result.Add(Tkelvin);
-            result.Add(Rt);
-            result.Add(volttherm);
-            result.Add(voltres);
-            result.Add((double)ADC);
-            return result;
         }
 
         public static bool tempInRange()
@@ -127,6 +121,19 @@ namespace Scintia_Thermocycler
                 }
             }
             return false;
+        }
+
+        public static double inDataToTemp()
+        {
+            nuevo = new String(aux.TakeWhile(Char.IsDigit).ToArray());
+            ADC = Convert.ToInt32(nuevo);
+            voltajeres = ((ADC * 5) / 1023);
+            voltajetherm = 5 - voltajeres;
+            Rt = (10000 * ((5 / voltajetherm) - 1));
+            Tc = (1 / (c1 + (c2 * Math.Log(Rt)) + (c3 * (Math.Log(Rt) * Math.Log(Rt) * Math.Log(Rt))))); //Steinhart & Hart formula.
+            Tcelsius = Tc - 273.15; //kelvin to celsius
+            temperatura = Convert.ToString(Tcelsius);
+            return Tcelsius;
         }
 
         /// <summary>
