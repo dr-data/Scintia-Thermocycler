@@ -29,13 +29,13 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("Cycle Name: Main, Repetitions: 1. ");
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea3 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend3 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series9 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series10 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series11 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series12 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Cycle Name: Main, Repetitions: 1. ");
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series4 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
@@ -177,10 +177,10 @@
             this.stepsList.Dock = System.Windows.Forms.DockStyle.Fill;
             this.stepsList.Location = new System.Drawing.Point(3, 53);
             this.stepsList.Name = "stepsList";
-            treeNode3.Name = "Root";
-            treeNode3.Text = "Cycle Name: Main, Repetitions: 1. ";
+            treeNode1.Name = "Root";
+            treeNode1.Text = "Cycle Name: Main, Repetitions: 1. ";
             this.stepsList.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode3});
+            treeNode1});
             this.stepsList.Size = new System.Drawing.Size(794, 187);
             this.stepsList.TabIndex = 2;
             // 
@@ -201,33 +201,33 @@
             // 
             // ttChart
             // 
-            chartArea3.Name = "ChartArea1";
-            this.ttChart.ChartAreas.Add(chartArea3);
+            chartArea1.Name = "ChartArea1";
+            this.ttChart.ChartAreas.Add(chartArea1);
             this.ttChart.Dock = System.Windows.Forms.DockStyle.Fill;
-            legend3.Name = "Legend1";
-            this.ttChart.Legends.Add(legend3);
+            legend1.Name = "Legend1";
+            this.ttChart.Legends.Add(legend1);
             this.ttChart.Location = new System.Drawing.Point(3, 3);
             this.ttChart.Name = "ttChart";
-            series9.ChartArea = "ChartArea1";
-            series9.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series9.Legend = "Legend1";
-            series9.Name = "Estimated Top Temp";
-            series10.ChartArea = "ChartArea1";
-            series10.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series10.Legend = "Legend1";
-            series10.Name = "Estimated Bottom Temp";
-            series11.ChartArea = "ChartArea1";
-            series11.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series11.Legend = "Legend1";
-            series11.Name = "Measured Top Temp";
-            series12.ChartArea = "ChartArea1";
-            series12.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series12.Legend = "Legend1";
-            series12.Name = "Measured Bottom Temp";
-            this.ttChart.Series.Add(series9);
-            this.ttChart.Series.Add(series10);
-            this.ttChart.Series.Add(series11);
-            this.ttChart.Series.Add(series12);
+            series1.ChartArea = "ChartArea1";
+            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series1.Legend = "Legend1";
+            series1.Name = "Estimated Top Temp";
+            series2.ChartArea = "ChartArea1";
+            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series2.Legend = "Legend1";
+            series2.Name = "Estimated Bottom Temp";
+            series3.ChartArea = "ChartArea1";
+            series3.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series3.Legend = "Legend1";
+            series3.Name = "Measured Top Temp";
+            series4.ChartArea = "ChartArea1";
+            series4.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series4.Legend = "Legend1";
+            series4.Name = "Measured Bottom Temp";
+            this.ttChart.Series.Add(series1);
+            this.ttChart.Series.Add(series2);
+            this.ttChart.Series.Add(series3);
+            this.ttChart.Series.Add(series4);
             this.ttChart.Size = new System.Drawing.Size(794, 187);
             this.ttChart.TabIndex = 0;
             this.ttChart.Text = "chart1";
@@ -271,7 +271,7 @@
             // 
             // serialPort1
             // 
-            this.serialPort1.PortName = "COM3";
+            this.serialPort1.PortName = "COM4";
             this.serialPort1.StopBits = System.IO.Ports.StopBits.Two;
             this.serialPort1.DataReceived += new System.IO.Ports.SerialDataReceivedEventHandler(this.serialPort1_DataReceived);
             // 

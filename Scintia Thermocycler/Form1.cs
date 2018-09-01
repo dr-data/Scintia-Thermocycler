@@ -240,7 +240,7 @@ namespace Scintia_Thermocycler
             Program.aux += serialPort1.ReadExisting();
             if (Program.aux[Program.aux.Length-1]=='\n')
             {
-                if (!Program.turn)
+                if (Program.turn != true)
                 {
                     Program.botTemp = Program.inDataToTemp();
                 }
@@ -284,7 +284,12 @@ namespace Scintia_Thermocycler
                     counter.Start();
                     // Preheat the top resistance
                     if (Program.preheat)
-                    {
+                    {                        
+                        if (!Program.turn)
+                        {
+                            Program.turn = true;
+                        }
+                        updateTopTemp();
                         if (Program.fansOn)
                         {
                             turnAllFansOff();
@@ -299,7 +304,9 @@ namespace Scintia_Thermocycler
                         }
                         if (Program.topTemp >= ((Program.topTempUpperLimit + Program.topTempLowerLimit) / 2))
                         {
+                            turnTopROff();
                             Program.preheat = false;
+                            Program.turn = false;
                         }
                     }
                     // Enter the main steps list
@@ -324,7 +331,7 @@ namespace Scintia_Thermocycler
                             Program.reachedTargetTempFirstTime = true;
                         }
                         // Let's take turns on temperatures, true for top, false for bottom
-                        if (Program.turn)
+                        if (Program.turn == true)
                         {
                             // Get top temperature updated
                             updateTopTemp();
@@ -345,7 +352,7 @@ namespace Scintia_Thermocycler
                             // Change turns
                             Program.turn = false;
                         }
-                        else
+                        else if(Program.turn == false)
                         {
                             // Update bottom temperature
                             updateBottomTemp();
@@ -374,12 +381,12 @@ namespace Scintia_Thermocycler
                             // Change turns
                             Program.turn = true;
                         }
-                        // Stop counter and report Progress
-                        counter.Stop();
-                        bgw.ReportProgress(0);
-                        // Wait before working again                    
-                        Thread.Sleep(100);
                     }
+                    // Stop counter and report Progress
+                    counter.Stop();
+                    bgw.ReportProgress(0);
+                    // Wait before working again                    
+                    Thread.Sleep(100);
                 }
             }
         }
@@ -391,24 +398,20 @@ namespace Scintia_Thermocycler
         {
             // Update timestamp with the time the step took
             Program.residualMilliseconds += counter.ElapsedMilliseconds;
-            if (Program.residualMilliseconds >= 1)
-            {
-                Program.timestamp += (int)Program.residualMilliseconds;
-            }
-            // Update graph with the current timestamp
-            updateGraph(Program.timestamp);
-            // Consider that the next time this function is called, the worker slept for 100ms
+            Program.timestamp += (int) Program.residualMilliseconds;
             Program.timestamp += 100;
             // Update currentStepDuration only if we have reached the target temp before
             if (Program.reachedTargetTempFirstTime)
             {
                 Program.currentStepDuration -= 100;
-                if (Program.residualMilliseconds >= 1)
-                {
-                    Program.currentStepDuration -= (int)Program.residualMilliseconds;
-                    Program.residualMilliseconds = 0;
-                }
+                Program.currentStepDuration -= (int)Program.residualMilliseconds;
             }
+            if (Program.residualMilliseconds >= 1)
+            {                
+                Program.residualMilliseconds = 0;
+            }
+            // Update graph with the current timestamp
+            updateGraph(Program.timestamp);
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
@@ -96,10 +97,14 @@ namespace Scintia_Thermocycler
 
         public static void addToStep(TreeNode node)
         {
-            if (node.Text.Contains("Cycle Name") && node.Name != "Root")
+            if (node.Name == "Root")
+            {
+                TraverseTree(node.Nodes);
+            }
+            else if (node.Text.Contains("Cycle Name") && node.Name != "Root")
             {
                 int reps = 0;
-                while(reps < (int)node.Tag)
+                while (reps < (int)node.Tag)
                 {
                     TraverseTree(node.Nodes);
                     reps++;
