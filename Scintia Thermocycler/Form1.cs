@@ -211,7 +211,6 @@ namespace Scintia_Thermocycler
                 Program.cycleToPerform.RemoveRange(0, Program.cycleToPerform.Count - 1);
             }
             Program.TraverseTree(stepsList.Nodes);
-            predictGraph(Program.cycleToPerform);
             bgw.RunWorkerAsync();
         }
 
@@ -258,6 +257,8 @@ namespace Scintia_Thermocycler
         /// </summary>
         private void bgw_DoWork(object sender, DoWorkEventArgs e)
         {
+            // Predict results
+            predictGraph(Program.cycleToPerform);
             // The first time this is invoked preheat the top resistor
             Program.preheat = true;
             // If the program is running, do the following
@@ -457,19 +458,19 @@ namespace Scintia_Thermocycler
             double expectedBotTemp = 0;
             bool innerReachTargetTemp = false;
 
-            ttChart.ChartAreas[0].AxisX.ScaleView.Zoomable = true;
-            ttChart.ChartAreas[0].AxisY.ScaleView.Zoom(0, 120);
+            ttChart.Invoke((Action)(() => ttChart.ChartAreas[0].AxisX.ScaleView.Zoomable = true));
+            ttChart.Invoke((Action)(() => ttChart.ChartAreas[0].AxisY.ScaleView.Zoom(0, 120)));
 
             updateTopTemp();
             while (Program.readingPort)
-            { Thread.Sleep(5); }
+            { }
             updateBottomTemp();
             while (Program.readingPort)
-            { Thread.Sleep(5); }
+            { }
             double time = 0;
 
-            ttChart.Series["Estimated Top Temp"].Points.AddXY(time, Program.topTemp);
-            ttChart.Series["Estimated Bottom Temp"].Points.AddXY(time, Program.botTemp);
+            ttChart.Invoke((Action)(() => ttChart.Series["Estimated Top Temp"].Points.AddXY(time, Program.topTemp)));
+            ttChart.Invoke((Action)(() => ttChart.Series["Estimated Bottom Temp"].Points.AddXY(time, Program.botTemp)));
 
             expectedTopTemp = Program.topTemp;
             expectedBotTemp = Program.botTemp;
@@ -533,23 +534,23 @@ namespace Scintia_Thermocycler
                         expectedTopTemp += Program.tempOnlyTopRaiseConstant / 2;
                     }
 
-                    ttChart.Series["Estimated Top Temp"].Points.AddXY(time / 1000, expectedTopTemp);
-                    ttChart.Series["Estimated Bottom Temp"].Points.AddXY(time / 1000, expectedBotTemp);
-                    ttChart.Refresh();
-                    time += 500;
+                    ttChart.Invoke((Action)(() => ttChart.Series["Estimated Top Temp"].Points.AddXY(time / 1000, expectedTopTemp)));
+                    ttChart.Invoke((Action)(() => ttChart.Series["Estimated Top Temp"].Points.AddXY(time / 1000, expectedBotTemp)));
+                    ttChart.Invoke((Action)(() => ttChart.Refresh()));
+                    time += 100;
                     if (innerReachTargetTemp)
                     {
-                        expectedDur -= 500;
+                        expectedDur -= 100;
                     }
                 }
             }
-            ttChart.ChartAreas[0].AxisX.ScaleView.Zoom(0, time/1000);
+            ttChart.Invoke((Action)(() => ttChart.ChartAreas[0].AxisX.ScaleView.Zoom(0, time/1000)));            
         }
 
         private void updateGraph(double timestamp)
         {
-            ttChart.Series["Measured Top Temp"].Points.AddXY( timestamp / 1000, (double) Program.topTemp);
-            ttChart.Series["Measured Bottom Temp"].Points.AddXY( timestamp / 1000, (double) Program.botTemp);
+            ttChart.Series["Measured Top Temp"].Points.AddXY( timestamp / 10000, (double) Program.topTemp);
+            ttChart.Series["Measured Bottom Temp"].Points.AddXY( timestamp / 10000, (double) Program.botTemp);
             ttChart.Refresh();
         }
 
