@@ -258,7 +258,7 @@ namespace Scintia_Thermocycler
         private void bgw_DoWork(object sender, DoWorkEventArgs e)
         {
             // Predict results
-            predictGraph(Program.cycleToPerform);
+            // predictGraph(Program.cycleToPerform);
             // The first time this is invoked preheat the top resistor
             Program.preheat = true;
             // If the program is running, do the following
@@ -283,6 +283,7 @@ namespace Scintia_Thermocycler
                 {
                     // Start counting process time
                     counter.Start();
+                    if (counter.ElapsedMilliseconds != 0) { counter.Reset(); }
                     // Preheat the top resistance
                     if (Program.preheat)
                     {                        
@@ -326,7 +327,7 @@ namespace Scintia_Thermocycler
                             Program.cycleToPerform.RemoveAt(0);
                         }
                         // Check if temperature is in range
-                        if (Program.tempInRange())
+                        if (Program.tempInRange() && Program.reachedTargetTempFirstTime != true)
                         {
                             // We've reached it for the first time so we can start counting duration
                             Program.reachedTargetTempFirstTime = true;
@@ -336,24 +337,19 @@ namespace Scintia_Thermocycler
                         {
                             // Get top temperature updated
                             updateTopTemp();
-                            // Wait for port to be read
-                            Thread.Sleep(100);
-                            while (Program.readingPort)
-                            {
-                            }
                             // Make decisions on the updated temperature
-                            if (Program.topTemp >= Program.topTempUpperLimit)
+                            if ((Program.topTemp >= Program.topTempUpperLimit) && (Program.topROn == true))
                             {
                                 turnTopROff();
                             }
-                            else if (Program.topTemp <= Program.topTempLowerLimit)
+                            else if ((Program.topTemp <= Program.topTempLowerLimit) && (Program.topROn == false))
                             {
                                 turnTopROn();
                             }
                             // Change turns
                             Program.turn = false;
                         }
-                        else if(Program.turn == false)
+                        else if (Program.turn == false)
                         {
                             // Update bottom temperature
                             updateBottomTemp();
@@ -365,8 +361,11 @@ namespace Scintia_Thermocycler
                             // Make decisions on the updated temperature
                             if (Program.botTemp >= Program.currentTargetTemperature)
                             {
-                                turnBottomROff();
-                                if (Program.botTemp > Program.currentTargetTemperature + Program.tempDropConstant)
+                                if (Program.botROn == true)
+                                {
+                                    turnBottomROff();
+                                }
+                                if (Program.botTemp > (Program.currentTargetTemperature + Program.tempDropConstant))
                                 {
                                     turnAllFansOn();
                                 }
@@ -374,9 +373,12 @@ namespace Scintia_Thermocycler
                             else
                             {
                                 turnAllFansOff();
-                                if (Program.botTemp < Program.currentTargetTemperature - Program.tempRaiseConstant)
+                                if (Program.botTemp < (Program.currentTargetTemperature - Program.tempRaiseConstant))
                                 {
-                                    turnBottomROn();
+                                    if (Program.botROn == false)
+                                    {
+                                        turnBottomROn();
+                                    }
                                 }
                             }
                             // Change turns
@@ -386,8 +388,6 @@ namespace Scintia_Thermocycler
                     // Stop counter and report Progress
                     counter.Stop();
                     bgw.ReportProgress(0);
-                    // Wait before working again                    
-                    Thread.Sleep(100);
                 }
             }
         }
@@ -405,12 +405,10 @@ namespace Scintia_Thermocycler
             if (Program.reachedTargetTempFirstTime)
             {
                 Program.currentStepDuration -= 100;
-                Program.currentStepDuration -= (int)Program.residualMilliseconds;
+                Program.currentStepDuration -= (int) Program.residualMilliseconds;
             }
-            if (Program.residualMilliseconds >= 1)
-            {                
-                Program.residualMilliseconds = 0;
-            }
+            Debug.WriteLine(Program.currentStepDuration.ToString() + ", " + counter.ElapsedMilliseconds.ToString());
+            Program.residualMilliseconds = 0;
             // Update graph with the current timestamp
             updateGraph(Program.timestamp);
         }
@@ -549,8 +547,8 @@ namespace Scintia_Thermocycler
 
         private void updateGraph(double timestamp)
         {
-            ttChart.Series["Measured Top Temp"].Points.AddXY( timestamp / 10000, (double) Program.topTemp);
-            ttChart.Series["Measured Bottom Temp"].Points.AddXY( timestamp / 10000, (double) Program.botTemp);
+            ttChart.Series["Measured Top Temp"].Points.AddXY( timestamp / 1000, (double) Program.topTemp);
+            ttChart.Series["Measured Bottom Temp"].Points.AddXY( timestamp / 1000, (double) Program.botTemp);
             ttChart.Refresh();
         }
 
@@ -590,11 +588,13 @@ namespace Scintia_Thermocycler
         private void updateTopTemp()
         {
             serialPort1.Write("A");
+            Thread.Sleep(100);
         }
 
         private void updateBottomTemp()
         {
             serialPort1.Write("B");
+            Thread.Sleep(100);
         }
 
         private void turnTopROn()

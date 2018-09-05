@@ -271,7 +271,7 @@
             // 
             // serialPort1
             // 
-            this.serialPort1.PortName = "COM4";
+            this.serialPort1.PortName = "COM5";
             this.serialPort1.StopBits = System.IO.Ports.StopBits.Two;
             this.serialPort1.DataReceived += new System.IO.Ports.SerialDataReceivedEventHandler(this.serialPort1_DataReceived);
             // 

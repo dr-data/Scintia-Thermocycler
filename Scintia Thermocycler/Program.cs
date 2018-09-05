@@ -118,9 +118,9 @@ namespace Scintia_Thermocycler
 
         public static bool tempInRange()
         {
-            if (botTemp > currentTargetTemperature - lowerLimit)
+            if (botTemp > (currentTargetTemperature - lowerLimit))
             {
-                if (botTemp < currentTargetTemperature + upperLimit)
+                if (botTemp < (currentTargetTemperature + upperLimit))
                 {
                     return true;
                 }
