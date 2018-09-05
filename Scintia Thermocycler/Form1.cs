@@ -19,11 +19,13 @@ namespace Scintia_Thermocycler
         /// Internal Helpers.
         /// </summary>
         Stopwatch counter;
+        Stopwatch globalCounter;
 
         public Form1()
         {
             InitializeComponent();
             counter = new Stopwatch();
+            globalCounter = new Stopwatch();
             if (!serialPort1.IsOpen)
             {
                 try
@@ -219,8 +221,8 @@ namespace Scintia_Thermocycler
         /// </summary>
         private void stopBtn_Click(object sender, EventArgs e)
         {
-            bgw.CancelAsync();
             checkIfPortIsOpen();
+            bgw.CancelAsync();
             serialPort1.Write("0");
             serialPort1.Write("1");
             serialPort1.Write("2");
@@ -257,6 +259,7 @@ namespace Scintia_Thermocycler
         /// </summary>
         private void bgw_DoWork(object sender, DoWorkEventArgs e)
         {
+            globalCounter.Start();
             // Predict results
             // predictGraph(Program.cycleToPerform);
             // The first time this is invoked preheat the top resistor
@@ -271,15 +274,8 @@ namespace Scintia_Thermocycler
                     Program.running = false;
                     e.Cancel = true;
                 }
-                // If there are no more steps to go through and the duration of the last step is over
-                if (Program.cycleToPerform.Count == 0 && Program.currentStepDuration <= 0)
-                {
-                    // Program is no longer running
-                    Program.running = false;
-                    return;
-                }
-                // Otherwise, if there are steps yet to do
-                else if (Program.cycleToPerform.Count >= 0)
+                // If there are steps yet to do
+                if (Program.cycleToPerform.Count >= 0)
                 {
                     // Start counting process time
                     counter.Start();
@@ -337,12 +333,16 @@ namespace Scintia_Thermocycler
                         {
                             // Get top temperature updated
                             updateTopTemp();
+                            while(Program.readingPort == true)
+                            {
+                                Thread.Sleep(100);
+                            }
                             // Make decisions on the updated temperature
-                            if ((Program.topTemp >= Program.topTempUpperLimit) && (Program.topROn == true))
+                            if (Program.topTemp > Program.topTempUpperLimit)
                             {
                                 turnTopROff();
                             }
-                            else if ((Program.topTemp <= Program.topTempLowerLimit) && (Program.topROn == false))
+                            else if (Program.topTemp <= Program.topTempLowerLimit)
                             {
                                 turnTopROn();
                             }
@@ -353,13 +353,12 @@ namespace Scintia_Thermocycler
                         {
                             // Update bottom temperature
                             updateBottomTemp();
-                            // Wait for port to be read
-                            Thread.Sleep(100);
-                            while (Program.readingPort)
+                            while (Program.readingPort == true)
                             {
+                                Thread.Sleep(100);
                             }
                             // Make decisions on the updated temperature
-                            if (Program.botTemp >= Program.currentTargetTemperature)
+                            if (Program.botTemp > Program.currentTargetTemperature)
                             {
                                 if (Program.botROn == true)
                                 {
@@ -387,7 +386,25 @@ namespace Scintia_Thermocycler
                     }
                     // Stop counter and report Progress
                     counter.Stop();
-                    bgw.ReportProgress(0);
+                    // Update timestamp with the time the step took
+                    Program.residualMilliseconds += counter.ElapsedMilliseconds;
+                    Program.timestamp += (int)Program.residualMilliseconds;
+                    Program.timestamp += 100;
+                    // Update currentStepDuration only if we have reached the target temp before
+                    if (Program.reachedTargetTempFirstTime)
+                    {
+                        Program.currentStepDuration -= 100;
+                        Program.currentStepDuration -= (int)Program.residualMilliseconds;
+                    }
+                    Debug.WriteLine(Program.currentStepDuration.ToString() + ", " + counter.ElapsedMilliseconds.ToString());
+                    Program.residualMilliseconds = 0;
+                    if (globalCounter.ElapsedMilliseconds > 1000)
+                    {
+                        globalCounter.Stop();
+                        globalCounter.Reset();
+                        bgw.ReportProgress(0);
+                        globalCounter.Start();
+                    }
                 }
             }
         }
@@ -397,20 +414,15 @@ namespace Scintia_Thermocycler
         /// </summary>
         private void bgw_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            // Update timestamp with the time the step took
-            Program.residualMilliseconds += counter.ElapsedMilliseconds;
-            Program.timestamp += (int) Program.residualMilliseconds;
-            Program.timestamp += 100;
-            // Update currentStepDuration only if we have reached the target temp before
-            if (Program.reachedTargetTempFirstTime)
-            {
-                Program.currentStepDuration -= 100;
-                Program.currentStepDuration -= (int) Program.residualMilliseconds;
-            }
-            Debug.WriteLine(Program.currentStepDuration.ToString() + ", " + counter.ElapsedMilliseconds.ToString());
-            Program.residualMilliseconds = 0;
             // Update graph with the current timestamp
             updateGraph(Program.timestamp);
+
+            // If there are no more steps to go through and the duration of the last step is over
+            if (Program.cycleToPerform.Count == 0 && Program.currentStepDuration <= 0)
+            {
+                // Program is no longer running
+                Program.running = false;
+            }
         }
 
         /// <summary>
@@ -587,54 +599,78 @@ namespace Scintia_Thermocycler
 
         private void updateTopTemp()
         {
+            Debug.WriteLine("Sent A to slave");
+            checkIfPortIsOpen();
             serialPort1.Write("A");
             Thread.Sleep(100);
+            serialPort1.Close();
         }
 
         private void updateBottomTemp()
         {
+            Debug.WriteLine("Sent B to slave");
+            checkIfPortIsOpen();
             serialPort1.Write("B");
             Thread.Sleep(100);
+            serialPort1.Close();
         }
 
         private void turnTopROn()
         {
-                Program.topROn = true;
-                serialPort1.Write("8");
+            Debug.WriteLine("Sent 8 to slave");
+            checkIfPortIsOpen();
+            Program.topROn = true;
+            serialPort1.Write("8");
+            serialPort1.Close();
         }
 
         private void turnTopROff()
         {
+            Debug.WriteLine("Sent 3 to slave");
+            checkIfPortIsOpen();
             Program.topROn = false;
             serialPort1.Write("3");
+            serialPort1.Close();
         }
 
         private void turnBottomROn()
         {
+            Debug.WriteLine("Sent 9 to slave");
+            checkIfPortIsOpen();
             Program.botROn = true;
             serialPort1.Write("9");
+            serialPort1.Close();
         }
 
         private void turnBottomROff()
         {
+            Debug.WriteLine("Sent 4 to slave");
+            checkIfPortIsOpen();
             Program.botROn = false;
             serialPort1.Write("4");
+            serialPort1.Close();
         }
 
         private void turnAllFansOn()
         {
+            Debug.WriteLine("Sent 5, 6, 7 to slave");
+            checkIfPortIsOpen();
             Program.fansOn = true;
             serialPort1.Write("5");
             serialPort1.Write("6");
             serialPort1.Write("7");
+            serialPort1.Close();
         }
 
         private void turnAllFansOff()
         {
+            Debug.WriteLine("Sent 0, 1, 2 to slave");
+            checkIfPortIsOpen();
             Program.fansOn = false;
             serialPort1.Write("0");
             serialPort1.Write("1");
             serialPort1.Write("2");
+            serialPort1.Close();
         }
     }
 }
