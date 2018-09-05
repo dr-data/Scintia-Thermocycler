@@ -17,4 +17,3 @@ D:\Documents\Visual Studio 2012\Projects\UI Final\Git Scintia Thermocycler\Scint
 D:\Documents\Visual Studio 2012\Projects\UI Final\Git Scintia Thermocycler\Scintia-Thermocycler\Scintia Thermocycler\obj\Debug\Scintia Thermocycler.csproj.GenerateResource.Cache
 D:\Documents\Visual Studio 2012\Projects\UI Final\Git Scintia Thermocycler\Scintia-Thermocycler\Scintia Thermocycler\obj\Debug\Scintia Thermocycler.exe
 D:\Documents\Visual Studio 2012\Projects\UI Final\Git Scintia Thermocycler\Scintia-Thermocycler\Scintia Thermocycler\obj\Debug\Scintia Thermocycler.pdb
-D:\Documents\Visual Studio 2012\Projects\UI Final\Git Scintia Thermocycler\Scintia-Thermocycler\Scintia Thermocycler\obj\Debug\Scintia Thermocycler.csprojResolveAssemblyReference.cache
