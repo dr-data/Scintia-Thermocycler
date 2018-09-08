@@ -377,6 +377,10 @@ namespace Scintia_Thermocycler
                                     if (Program.botROn == false)
                                     {
                                         turnBottomROn();
+                                        if (Program.topROn == true)
+                                        {
+                                            turnTopROff();
+                                        }
                                     }
                                 }
                             }
