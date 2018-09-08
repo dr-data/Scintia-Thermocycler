@@ -342,7 +342,7 @@ namespace Scintia_Thermocycler
                             {
                                 turnTopROff();
                             }
-                            else if (Program.topTemp <= Program.topTempLowerLimit)
+                            else if (Program.topTemp <= Program.topTempLowerLimit && Program.botROn == false)
                             {
                                 turnTopROn();
                             }
