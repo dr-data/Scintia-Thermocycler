@@ -342,9 +342,12 @@ namespace Scintia_Thermocycler
                             {
                                 turnTopROff();
                             }
-                            else if (Program.topTemp <= Program.topTempLowerLimit && Program.botROn == false)
+                            else if (Program.topTemp <= Program.topTempLowerLimit)
                             {
-                                turnTopROn();
+                                if (Program.botROn == false)
+                                {
+                                    turnTopROn();
+                                }
                             }
                             // Change turns
                             Program.turn = false;
@@ -402,7 +405,7 @@ namespace Scintia_Thermocycler
                     }
                     Debug.WriteLine(Program.currentStepDuration.ToString() + ", " + counter.ElapsedMilliseconds.ToString());
                     Program.residualMilliseconds = 0;
-                    if (globalCounter.ElapsedMilliseconds > 1000)
+                    if (globalCounter.ElapsedMilliseconds > 500)
                     {
                         globalCounter.Stop();
                         globalCounter.Reset();
