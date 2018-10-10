@@ -344,10 +344,7 @@ namespace Scintia_Thermocycler
                             }
                             else if (Program.topTemp <= Program.topTempLowerLimit)
                             {
-                                if (Program.botROn == false)
-                                {
-                                    turnTopROn();
-                                }
+                                turnTopROn();
                             }
                             // Change turns
                             Program.turn = false;
@@ -380,10 +377,6 @@ namespace Scintia_Thermocycler
                                     if (Program.botROn == false)
                                     {
                                         turnBottomROn();
-                                        if (Program.topROn == true)
-                                        {
-                                            turnTopROff();
-                                        }
                                     }
                                 }
                             }
@@ -561,13 +554,13 @@ namespace Scintia_Thermocycler
                     }
                 }
             }
-            ttChart.Invoke((Action)(() => ttChart.ChartAreas[0].AxisX.ScaleView.Zoom(0, time/1000)));            
+            ttChart.Invoke((Action)(() => ttChart.ChartAreas[0].AxisX.ScaleView.Zoom(0, (int) Math.Truncate(time/1000))));            
         }
 
         private void updateGraph(double timestamp)
         {
-            ttChart.Series["Measured Top Temp"].Points.AddXY( timestamp / 1000, (double) Program.topTemp);
-            ttChart.Series["Measured Bottom Temp"].Points.AddXY( timestamp / 1000, (double) Program.botTemp);
+            ttChart.Series["Measured Top Temp"].Points.AddXY( (int) Math.Truncate(timestamp / 1000), (double) Program.topTemp);
+            ttChart.Series["Measured Bottom Temp"].Points.AddXY( (int) Math.Truncate(timestamp / 1000), (double) Program.botTemp);
             ttChart.Refresh();
         }
 
